@@ -17,37 +17,46 @@ A friction-free way to track spending without opening a spreadsheet! This AI-pow
 
 ### Prerequisites
 
-- Java 17 or higher
-- Maven 3.9+
-- Google Gemini API Key ([Get one here](https://aistudio.google.com/app/apikey))
+- **Java 21** or higher (Java 21 recommended)
+- **Maven 3.9+**
+- **MySQL 8.0+** (for persistent storage)
+- **Google Gemini API Key** ([Get one here](https://aistudio.google.com/app/apikey))
 
 ### Installation
 
-1. **Clone or navigate to the project:**
-   ```bash
-   cd /home/ratnesh/Documents/concierge
-   ```
+#### Step 1: Setup Database
 
-2. **Set up your API key:**
-   ```bash
-   export GOOGLE_API_KEY="your-gemini-api-key-here"
-   ```
-   
-   Or create a `.env` file:
-   ```bash
-   echo 'export GOOGLE_API_KEY="your-key-here"' > .env
-   source .env
-   ```
+```bash
+# Automated setup (recommended)
+./setup-database.sh
 
-3. **Build the project:**
-   ```bash
-   ./mvnw clean package
-   ```
+# Or manual setup
+mysql -u root -p
+CREATE DATABASE concierge CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'concierge_user'@'localhost' IDENTIFIED BY 'concierge_pass';
+GRANT ALL PRIVILEGES ON concierge.* TO 'concierge_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
 
-4. **Run the application:**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+#### Step 2: Configure API Key
+
+Edit `src/main/resources/application.properties` and replace the placeholder:
+```properties
+google.api.key=your-actual-google-gemini-api-key-here
+```
+
+#### Step 3: Build and Run
+
+```bash
+# Build the project
+./run-java21.sh clean package
+
+# Run the application (Flyway will auto-create database tables)
+./run-java21.sh
+```
+
+The application will be available at **http://localhost:8081**
 
 5. **Access the Web UI:**
    Open your browser to: http://localhost:8081
