@@ -204,6 +204,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .currencyCode(user.getCurrencyCode())
                 .role(user.getRole().name())
                 .build();
 
@@ -216,4 +217,3 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 }
-

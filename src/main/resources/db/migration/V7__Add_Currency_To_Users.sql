@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN currency_code VARCHAR(3) DEFAULT 'USD';
+

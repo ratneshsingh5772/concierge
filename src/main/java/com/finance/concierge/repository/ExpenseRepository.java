@@ -93,5 +93,28 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
      * Count expenses by user
      */
     long countByUserId(Long userId);
-}
 
+    /**
+     * Find daily spending
+     */
+    @Query("SELECT e.expenseDate, SUM(e.amount) FROM Expense e WHERE e.user = :user AND e.expenseDate >= :startDate AND e.expenseDate <= :endDate GROUP BY e.expenseDate ORDER BY e.expenseDate ASC")
+    List<Object[]> findDailySpending(@Param("user") User user, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * Find monthly spending
+     */
+    @Query("SELECT FUNCTION('MONTH', e.expenseDate), SUM(e.amount) FROM Expense e WHERE e.user = :user AND FUNCTION('YEAR', e.expenseDate) = :year GROUP BY FUNCTION('MONTH', e.expenseDate) ORDER BY FUNCTION('MONTH', e.expenseDate) ASC")
+    List<Object[]> findMonthlySpending(@Param("user") User user, @Param("year") int year);
+
+    /**
+     * Find total spent in period
+     */
+    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.user = :user AND e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
+    BigDecimal findTotalSpentInPeriod(@Param("user") User user, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * Find highest daily spends
+     */
+    @Query("SELECT e.expenseDate, SUM(e.amount) as total FROM Expense e WHERE e.user = :user GROUP BY e.expenseDate ORDER BY total DESC")
+    List<Object[]> findHighestDailySpends(@Param("user") User user, Pageable pageable);
+}
