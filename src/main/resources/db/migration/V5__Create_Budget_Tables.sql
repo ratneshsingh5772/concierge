@@ -29,4 +29,3 @@ CREATE TABLE budgets (
     INDEX idx_budget_period (budget_period)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='User budget settings for categories and total spending';
-

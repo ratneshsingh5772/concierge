@@ -7,6 +7,7 @@ import com.google.adk.sessions.Session;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import io.reactivex.rxjava3.core.Flowable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,6 +17,7 @@ import java.util.Scanner;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 @SpringBootApplication
 public class ConciergeApplication implements CommandLineRunner {
 
@@ -30,28 +32,34 @@ public class ConciergeApplication implements CommandLineRunner {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	@SuppressWarnings("java:S106") // Standard outputs should not be used directly to log anything
+	public void run(String... args) {
 		// Load API key from application.properties if not in env
 		String apiKey = environment.getProperty("google.api.key");
-		if (apiKey != null && !apiKey.isEmpty() && System.getenv("GOOGLE_API_KEY") == null) {
-			// Set it as a system property which some SDKs might check,
-			// but for Google ADK/GenAI we might need to ensure it's available.
-			// Since we can't easily set Env vars in Java, we'll rely on the Agent being initialized
-			// AFTER we check this, or we might need to pass it explicitly.
-			// However, FinanceAgent initializes statically.
 
-			// WORKAROUND: The FinanceAgent class initializes ROOT_AGENT statically.
-			// We need to ensure the key is available before that class is loaded if possible,
-			// or we need to modify FinanceAgent to be non-static.
+		// Check if running in non-interactive mode.
+		// If System.console() is null, we might be in background, test, or redirect.
+		// We only proceed if we can confirm meaningful interactive capability or explicit override.
+		// For safety in 'mvn spring-boot:run' or background, if System.in is not available, we abort.
+		try {
+			if (System.console() == null && System.in.available() <= 0 && !isIdeConsole()) {
+				log.info("Non-interactive environment detected. CLI disabled.");
+				return;
+			}
+		} catch (Exception e) {
+			// System.in.available() might throw if stream closed
+			log.info("Input stream not available. CLI disabled.");
+			return;
 		}
 
-		System.out.println("========================================");
-		System.out.println("  Personal Finance Concierge Started!");
-		System.out.println("========================================");
-		System.out.println("Web UI: http://localhost:8081");
-		System.out.println("API Endpoint: http://localhost:8081/api/chat");
-		System.out.println("CLI: Type below or use 'exit' to quit");
-		System.out.println("========================================\n");
+		log.info("========================================");
+		log.info("  Personal Finance Concierge Started!");
+		log.info("========================================");
+		log.info("Web UI: http://localhost:8081");
+		log.info("API Endpoint: http://localhost:8081/api/chat");
+		log.info("CLI: Type below or use 'exit' to quit");
+		log.info("========================================\n");
+
 
 		RunConfig runConfig = RunConfig.builder().build();
 		InMemoryRunner runner = new InMemoryRunner(FinanceAgent.createAgent(apiKey));
@@ -62,28 +70,40 @@ public class ConciergeApplication implements CommandLineRunner {
 				.blockingGet();
 
 		try (Scanner scanner = new Scanner(System.in, UTF_8)) {
-			while (true) {
+			boolean running = true;
+			while (running) {
 				System.out.print("> ");
-				String input = scanner.nextLine();
+				// Check for input availability before blocking to avoid NoSuchElementException in some environments
+				if (!scanner.hasNextLine()) {
+					running = false;
+				} else {
+					String input = scanner.nextLine();
 
-				if ("exit".equalsIgnoreCase(input.trim())) {
-					System.out.println("Goodbye!");
-					break;
-				}
+					if ("exit".equalsIgnoreCase(input.trim())) {
+						log.info("Goodbye!");
+						running = false;
+					} else {
+						try {
+							Content userMsg = Content.fromParts(Part.fromText(input));
+							Flowable<Event> events = runner.runAsync(session.userId(), session.id(), userMsg, runConfig);
 
-				try {
-					Content userMsg = Content.fromParts(Part.fromText(input));
-					Flowable<Event> events = runner.runAsync(session.userId(), session.id(), userMsg, runConfig);
-
-					events.blockingForEach(event -> {
-						if (event.finalResponse()) {
-							System.out.println("\n" + event.stringifyContent() + "\n");
+							events.blockingForEach(event -> {
+								if (event.finalResponse()) {
+									// CLI output requires System.out
+									System.out.println("\n" + event.stringifyContent() + "\n");
+								}
+							});
+						} catch (Exception e) {
+							log.error("Error processing text input", e);
 						}
-					});
-				} catch (Exception e) {
-					System.out.println("Error: " + e.getMessage());
+					}
 				}
 			}
 		}
+	}
+
+	private boolean isIdeConsole() {
+		// Basic check if we might be in an IDE where System.console() is null but we still have input
+		return System.getenv("jetbrains.client.id") != null || System.getProperty("java.class.path").contains("idea_rt.jar");
 	}
 }

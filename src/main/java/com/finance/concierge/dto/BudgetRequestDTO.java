@@ -29,11 +29,13 @@ public class BudgetRequestDTO {
     private BigDecimal budgetAmount;
 
     @Schema(description = "Budget period (DAILY, WEEKLY, MONTHLY, YEARLY)", example = "MONTHLY", defaultValue = "MONTHLY")
+    @Builder.Default
     private String budgetPeriod = "MONTHLY";
 
     @Schema(description = "Alert threshold percentage (e.g., 80 for 80%)", example = "80.0")
     private BigDecimal alertThreshold;
 
     @Schema(description = "Set as total budget (ignores categoryName)", example = "false")
+    @Builder.Default
     private Boolean isTotalBudget = false;
 }

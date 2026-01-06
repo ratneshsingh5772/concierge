@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS categories (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_name (name),
-    INDEX idx_is_active (is_active)
+    INDEX idx_categories_name (name),
+    INDEX idx_categories_is_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default categories
@@ -38,11 +38,11 @@ CREATE TABLE IF NOT EXISTS expenses (
     ai_metadata JSON,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_category_id (category_id),
-    INDEX idx_expense_date (expense_date),
-    INDEX idx_created_at (created_at),
-    INDEX idx_user_date (user_id, expense_date),
+    INDEX idx_expenses_user_id (user_id),
+    INDEX idx_expenses_category_id (category_id),
+    INDEX idx_expenses_expense_date (expense_date),
+    INDEX idx_expenses_created_at (created_at),
+    INDEX idx_expenses_user_date (user_id, expense_date),
     CONSTRAINT fk_expense_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_expense_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -95,9 +95,9 @@ CREATE TABLE IF NOT EXISTS ai_parsing_logs (
     success BOOLEAN NOT NULL DEFAULT TRUE,
     error_message TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at),
-    INDEX idx_success (success),
+    INDEX idx_ai_logs_user_id (user_id),
+    INDEX idx_ai_logs_created_at (created_at),
+    INDEX idx_ai_logs_success (success),
     CONSTRAINT fk_ai_log_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

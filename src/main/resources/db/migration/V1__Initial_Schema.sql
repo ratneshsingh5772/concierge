@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     last_activity DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_is_active (is_active),
-    INDEX idx_last_activity (last_activity)
+    INDEX idx_sessions_user_id (user_id),
+    INDEX idx_sessions_is_active (is_active),
+    INDEX idx_sessions_last_activity (last_activity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create chat_history table
@@ -23,9 +23,8 @@ CREATE TABLE IF NOT EXISTS chat_history (
     message_type VARCHAR(20) DEFAULT 'CHAT',
     metadata TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_session_id (session_id),
-    INDEX idx_created_at (created_at),
-    INDEX idx_user_created (user_id, created_at)
+    INDEX idx_chat_user_id (user_id),
+    INDEX idx_chat_session_id (session_id),
+    INDEX idx_chat_created_at (created_at),
+    INDEX idx_chat_user_created (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

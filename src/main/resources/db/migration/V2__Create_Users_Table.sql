@@ -15,21 +15,16 @@ CREATE TABLE IF NOT EXISTS users (
     last_login DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_username (username),
-    INDEX idx_email (email),
-    INDEX idx_role (role),
-    INDEX idx_is_enabled (is_enabled)
+    INDEX idx_users_username (username),
+    INDEX idx_users_email (email),
+    INDEX idx_users_role (role),
+    INDEX idx_users_is_enabled (is_enabled)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add user_id foreign key to user_sessions table
-ALTER TABLE user_sessions
-ADD COLUMN user_id_fk BIGINT,
-ADD CONSTRAINT fk_user_session_user
-FOREIGN KEY (user_id_fk) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE user_sessions ADD COLUMN user_id_fk BIGINT;
+ALTER TABLE user_sessions ADD CONSTRAINT fk_user_session_user FOREIGN KEY (user_id_fk) REFERENCES users(id) ON DELETE CASCADE;
 
 -- Add user_id foreign key to chat_history table
-ALTER TABLE chat_history
-ADD COLUMN user_id_fk BIGINT,
-ADD CONSTRAINT fk_chat_history_user
-FOREIGN KEY (user_id_fk) REFERENCES users(id) ON DELETE CASCADE;
-
+ALTER TABLE chat_history ADD COLUMN user_id_fk BIGINT;
+ALTER TABLE chat_history ADD CONSTRAINT fk_chat_history_user FOREIGN KEY (user_id_fk) REFERENCES users(id) ON DELETE CASCADE;

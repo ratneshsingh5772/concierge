@@ -45,12 +45,14 @@ public class Budget {
     private BudgetPeriod budgetPeriod;
 
     @Column(name = "is_total_budget", nullable = false)
+    @Builder.Default
     private Boolean isTotalBudget = false;
 
     @Column(name = "alert_threshold", precision = 5, scale = 2)
     private BigDecimal alertThreshold; // Alert when X% of budget is used
 
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @CreationTimestamp
@@ -71,4 +73,3 @@ public class Budget {
         YEARLY
     }
 }
-
