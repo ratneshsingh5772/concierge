@@ -1,11 +1,14 @@
 package com.finance.concierge.service.impl;
 
+import com.finance.concierge.FinanceAgent;
 import com.finance.concierge.dto.ChatRequestDTO;
 import com.finance.concierge.dto.ChatResponseDTO;
+import com.finance.concierge.entity.Expense;
 import com.finance.concierge.exception.ChatServiceException;
 import com.finance.concierge.helper.ResponseHelper;
 import com.finance.concierge.service.ChatHistoryService;
 import com.finance.concierge.service.ChatService;
+import com.finance.concierge.service.ExpenseService;
 import com.finance.concierge.service.SessionService;
 import com.finance.concierge.util.MessageUtils;
 import com.google.adk.agents.RunConfig;
@@ -20,7 +23,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 /**
- * Implementation of ChatService with persistent chat history
+ * Implementation of ChatService with persistent chat history and automatic expense tracking
  * Following Single Responsibility Principle (SRP) and Dependency Inversion Principle (DIP)
  */
 @Slf4j
@@ -31,6 +34,7 @@ public class ChatServiceImpl implements ChatService {
     private final InMemoryRunner runner;
     private final SessionService sessionService;
     private final ChatHistoryService chatHistoryService;
+    private final ExpenseService expenseService;
 
     private static final int MAX_CONTEXT_MESSAGES = 10;
 
@@ -40,7 +44,14 @@ public class ChatServiceImpl implements ChatService {
 
         try {
             String userId = request.getUserIdOrDefault();
+            Long userIdLong = Long.parseLong(userId);
             Session session = sessionService.getOrCreateSession(userId);
+
+            // Set user ID in FinanceAgent for database operations
+            FinanceAgent.setCurrentUserId(userIdLong);
+
+            // NOTE: Expense detection is handled by the AI agent's logExpense() tool
+            // No need to parse here to avoid duplicate saves
 
             // Get conversation context from history
             String conversationContext = chatHistoryService.getConversationContext(userId, MAX_CONTEXT_MESSAGES);
@@ -87,6 +98,9 @@ public class ChatServiceImpl implements ChatService {
                             log.info("Chat history saved for user: {}", userId);
                         } catch (Exception e) {
                             log.error("Failed to save chat history", e);
+                        } finally {
+                            // Clear user ID from FinanceAgent thread local
+                            FinanceAgent.clearCurrentUserId();
                         }
                         sink.complete();
                     }
@@ -95,6 +109,7 @@ public class ChatServiceImpl implements ChatService {
 
         } catch (Exception e) {
             log.error("Error creating streaming response", e);
+            FinanceAgent.clearCurrentUserId(); // Clear on error too
             throw new ChatServiceException("Failed to process streaming message", e);
         }
     }
@@ -105,7 +120,14 @@ public class ChatServiceImpl implements ChatService {
 
         try {
             String userId = request.getUserIdOrDefault();
+            Long userIdLong = Long.parseLong(userId);
             Session session = sessionService.getOrCreateSession(userId);
+
+            // Set user ID in FinanceAgent for database operations
+            FinanceAgent.setCurrentUserId(userIdLong);
+
+            // NOTE: Expense detection is handled by the AI agent's logExpense() tool
+            // No need to parse here to avoid duplicate saves
 
             // Get conversation context from history
             String conversationContext = chatHistoryService.getConversationContext(userId, MAX_CONTEXT_MESSAGES);
@@ -136,6 +158,9 @@ public class ChatServiceImpl implements ChatService {
             );
             log.info("Chat history saved for user: {}", userId);
 
+            // Clear user ID after processing
+            FinanceAgent.clearCurrentUserId();
+
             return ChatResponseDTO.builder()
                     .response(finalResponse)
                     .userId(userId)
@@ -144,9 +169,11 @@ public class ChatServiceImpl implements ChatService {
 
         } catch (Exception e) {
             log.error("Error processing message", e);
+            FinanceAgent.clearCurrentUserId(); // Clear on error
             throw new ChatServiceException("Failed to process message: " + e.getMessage(), e);
         }
     }
+
 
     /**
      * Build message with conversation context for better AI understanding

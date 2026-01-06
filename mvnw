@@ -29,6 +29,11 @@
 #   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
 # ----------------------------------------------------------------------------
 
+# Force Java 21 for this specific environment if available
+if [ -d "/home/ratnesh/.jdks/corretto-21.0.9" ]; then
+    export JAVA_HOME="/home/ratnesh/.jdks/corretto-21.0.9"
+fi
+
 set -euf
 [ "${MVNW_VERBOSE-}" != debug ] || set -x
 

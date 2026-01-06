@@ -1,5 +1,6 @@
 package com.finance.concierge;
 
+import com.finance.concierge.service.FinanceAgentToolService;
 import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.models.Gemini;
@@ -21,19 +22,59 @@ import java.util.Map;
 public class FinanceAgent {
 
     private static final String CSV_FILE = "expenses.csv";
+
+    // Updated to include ALL 8 categories from database
     private static final Map<String, Double> BUDGETS = Map.of(
         "Food", 200.0,
         "Transport", 100.0,
-        "Entertainment", 150.0
+        "Entertainment", 150.0,
+        "Bills", 300.0,        // Added
+        "Shopping", 250.0,     // Added
+        "Health", 200.0,       // Added
+        "Education", 150.0,    // Added
+        "Other", 100.0         // Added
     );
 
+    // Static holder for Spring-managed service (set via constructor)
+    private static FinanceAgentToolService toolService;
+
+    // Static holder for current user ID (set per request)
+    private static ThreadLocal<Long> currentUserId = new ThreadLocal<>();
+
     public static BaseAgent ROOT_AGENT = createAgent(System.getenv("GOOGLE_API_KEY"));
+
+    // Constructor to inject the service
+    public FinanceAgent(FinanceAgentToolService toolService) {
+        FinanceAgent.toolService = toolService;
+    }
+
+    public static void setCurrentUserId(Long userId) {
+        currentUserId.set(userId);
+    }
+
+    public static Long getCurrentUserId() {
+        return currentUserId.get();
+    }
+
+    public static void clearCurrentUserId() {
+        currentUserId.remove();
+    }
 
     public static BaseAgent createAgent(String apiKey) {
         var builder = LlmAgent.builder()
             .name("finance-agent")
             .instruction("You are a helpful personal finance concierge. You help users track expenses and monitor their budget. " +
+                         "Available categories: Food, Transport, Entertainment, Bills (for utilities/rent), Shopping, Health, Education, Other. " +
                          "Always use the provided tools to log expenses or check status. " +
+                         "Map user expenses to the correct category: " +
+                         "- Bills: electricity, water, internet, rent, phone, utilities " +
+                         "- Food: coffee, lunch, dinner, groceries, restaurants " +
+                         "- Transport: uber, taxi, bus, gas, parking " +
+                         "- Entertainment: movies, games, concerts " +
+                         "- Shopping: clothes, electronics, general shopping " +
+                         "- Health: doctor, medicine, gym, fitness " +
+                         "- Education: books, courses, tuition " +
+                         "- Other: miscellaneous expenses. " +
                          "Today's date is " + LocalDate.now());
 
         if (apiKey != null && !apiKey.isEmpty()) {
@@ -54,16 +95,18 @@ public class FinanceAgent {
             .build();
     }
 
-    // Keep a static reference for backward compatibility if needed, but it might fail if env var is missing
-    // public static BaseAgent ROOT_AGENT = createAgent(null);
-
-
     @Schema(description = "Logs a new expense to the tracker")
     public static Map<String, String> logExpense(
         @Schema(name = "amount", description = "The amount spent") double amount,
-        @Schema(name = "category", description = "The category of the expense (e.g., Food, Transport)") String category,
+        @Schema(name = "category", description = "The category: Food, Transport, Entertainment, Bills, Shopping, Health, Education, or Other") String category,
         @Schema(name = "description", description = "A brief description of the expense") String description
     ) {
+        // Use the Spring service to save to database
+        if (toolService != null && getCurrentUserId() != null) {
+            return toolService.logExpense(amount, category, description, getCurrentUserId());
+        }
+
+        // Fallback to CSV only if service not available (shouldn't happen in production)
         try {
             File file = new File(CSV_FILE);
             boolean fileExists = file.exists();
@@ -87,16 +130,21 @@ public class FinanceAgent {
 
     @Schema(description = "Checks the budget status for a specific category")
     public static Map<String, String> getBudgetStatus(
-        @Schema(name = "category", description = "The category to check (Food, Transport, Entertainment)") String category
+        @Schema(name = "category", description = "Category: Food, Transport, Entertainment, Bills, Shopping, Health, Education, or Other") String category
     ) {
-        // Normalize category name for case-insensitive lookup
+        // Use dynamic budgets from database if available
+        if (toolService != null && getCurrentUserId() != null) {
+            return toolService.getBudgetStatus(category, getCurrentUserId());
+        }
+
+        // Fallback to static budgets
         String normalizedCategory = BUDGETS.keySet().stream()
             .filter(k -> k.equalsIgnoreCase(category))
             .findFirst()
             .orElse(category);
 
         if (!BUDGETS.containsKey(normalizedCategory)) {
-            return Map.of("error", "No budget defined for category: " + category);
+            return Map.of("error", "No budget defined for category: " + category + ". Available categories: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Other");
         }
 
         double limit = BUDGETS.get(normalizedCategory);
