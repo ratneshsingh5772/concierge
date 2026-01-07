@@ -47,5 +47,5 @@ Since this is a fresh codebase, adhere to the following structure for new compon
 - Only READ operations are allowed via `GET /api/categories`
 - See `.github/copilot-category-instructions.md` for detailed rules
 
-**Predefined Categories**: Food, Transport, Bills, Entertainment, Shopping, Health, Education, Other
+**Predefined Categories**: Food, Grocery, Transport, Bills, Entertainment, Shopping, Health, Education, Investment, Insurance, Other
 
