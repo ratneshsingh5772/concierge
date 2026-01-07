@@ -4,6 +4,7 @@ import com.finance.concierge.common.ApiResponse;
 import com.finance.concierge.dto.DashboardStatsDTO;
 import com.finance.concierge.dto.ExpenseResponseDTO;
 import com.finance.concierge.entity.Expense;
+import com.finance.concierge.entity.User;
 import com.finance.concierge.service.DashboardService;
 import com.finance.concierge.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -253,9 +254,9 @@ public class ExpenseController {
      * Helper: Extract user ID from authentication
      */
     private Long getUserIdFromAuth(Authentication authentication) {
-        // Assuming the username is the user ID or email
-        // Adjust based on your User entity structure
-        return 1L; // TODO: Get actual user ID from authentication/UserDetailsService
+        // The principal is the User entity (implements UserDetails)
+        User user = (User) authentication.getPrincipal();
+        return user.getId();
     }
 
     /**
