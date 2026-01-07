@@ -40,7 +40,6 @@ public class CategoryController {
         List<CategoryResponseDTO> categories = categoryService.getAllCategories();
 
         return ResponseEntity.ok(ApiResponse.success(categories,
-                "Retrieved " + categories.size() + " categories"));
+                "Retrieved " + (categories != null ? categories.size() : 0) + " categories"));
     }
 }
-

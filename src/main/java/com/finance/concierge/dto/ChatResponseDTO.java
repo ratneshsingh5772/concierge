@@ -19,5 +19,6 @@ public class ChatResponseDTO {
     private String userId;
 
     private Long timestamp;
-}
 
+    private String conversationId;
+}

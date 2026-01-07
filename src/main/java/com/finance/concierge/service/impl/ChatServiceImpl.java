@@ -165,6 +165,7 @@ public class ChatServiceImpl implements ChatService {
                     .response(finalResponse)
                     .userId(userId)
                     .timestamp(System.currentTimeMillis())
+                    .conversationId(session.id())
                     .build();
 
         } catch (Exception e) {
@@ -186,4 +187,3 @@ public class ChatServiceImpl implements ChatService {
         return conversationContext + "\nCurrent message:\n" + currentMessage;
     }
 }
-
