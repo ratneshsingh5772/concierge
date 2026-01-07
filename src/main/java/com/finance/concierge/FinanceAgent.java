@@ -23,7 +23,7 @@ public class FinanceAgent {
 
     private static final String CSV_FILE = "expenses.csv";
 
-    // Updated to include ALL 13 categories from database
+    // Updated to include ALL 15 categories from database
     private static final Map<String, Double> BUDGETS = Map.ofEntries(
         Map.entry("Food", 200.0),
         Map.entry("Transport", 100.0),
@@ -35,8 +35,10 @@ public class FinanceAgent {
         Map.entry("Grocery", 300.0),
         Map.entry("Investment", 500.0),
         Map.entry("Insurance", 200.0),
-        Map.entry("Credit Card Bill", 500.0), // Added
-        Map.entry("Social Expense", 150.0),   // Added
+        Map.entry("Credit Card Bill", 500.0),
+        Map.entry("Social Expense", 150.0),
+        Map.entry("Home Repair", 250.0),      // Added
+        Map.entry("Loan", 400.0),             // Added
         Map.entry("Other", 100.0)
     );
 
@@ -69,7 +71,7 @@ public class FinanceAgent {
         var builder = LlmAgent.builder()
             .name("finance-agent")
             .instruction("You are a helpful personal finance concierge. You help users track expenses and monitor their budget. " +
-                         "Available categories: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, Other. " +
+                         "Available categories: Food, Transport, Entertainment, Bills (for utilities/rent), Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, Home Repair, Loan, Other. " +
                          "Always use the provided tools to log expenses or check status. " +
                          "Map user expenses to the correct category: " +
                          "- Bills: electricity, water, internet, rent, phone, utilities " +
@@ -84,6 +86,8 @@ public class FinanceAgent {
                          "- Education: books, courses, tuition " +
                          "- Investment: stocks, mutual funds, sip, savings " +
                          "- Insurance: life insurance, health insurance, car insurance premiums " +
+                         "- Home Repair: repairs, maintenance, renovation " +
+                         "- Loan: loan payments, emi, mortgage " +
                          "- Other: miscellaneous expenses. " +
                          "Today's date is " + LocalDate.now());
 
@@ -108,7 +112,7 @@ public class FinanceAgent {
     @Schema(description = "Logs a new expense to the tracker")
     public static Map<String, String> logExpense(
         @Schema(name = "amount", description = "The amount spent") double amount,
-        @Schema(name = "category", description = "The category: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, or Other") String category,
+        @Schema(name = "category", description = "The category: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, Home Repair, Loan, or Other") String category,
         @Schema(name = "description", description = "A brief description of the expense") String description
     ) {
         // Use the Spring service to save to database
@@ -140,7 +144,7 @@ public class FinanceAgent {
 
     @Schema(description = "Checks the budget status for a specific category")
     public static Map<String, String> getBudgetStatus(
-        @Schema(name = "category", description = "Category: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, or Other") String category
+        @Schema(name = "category", description = "Category: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, Home Repair, Loan, or Other") String category
     ) {
         // Use dynamic budgets from database if available
         if (toolService != null && getCurrentUserId() != null) {
@@ -154,7 +158,7 @@ public class FinanceAgent {
             .orElse(category);
 
         if (!BUDGETS.containsKey(normalizedCategory)) {
-            return Map.of("error", "No budget defined for category: " + category + ". Available categories: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, Other");
+            return Map.of("error", "No budget defined for category: " + category + ". Available categories: Food, Transport, Entertainment, Bills, Shopping, Health, Education, Grocery, Investment, Insurance, Credit Card Bill, Social Expense, Home Repair, Loan, Other");
         }
 
         double limit = BUDGETS.get(normalizedCategory);
