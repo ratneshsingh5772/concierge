@@ -39,3 +39,13 @@ Since this is a fresh codebase, adhere to the following structure for new compon
 ## Implementation Guidelines
 - **Parsing Logic**: When implementing the parser, start with regex/string manipulation. If external AI APIs are needed later, abstract the parser behind an interface.
 - **CSV Handling**: Ensure thread safety if writing to the CSV file from concurrent web requests.
+
+## Category Management - IMPORTANT
+⚠️ **Categories are PREDEFINED ONLY**
+- Categories CANNOT be created, modified, or deleted by users
+- Categories are global and shared across all users
+- Only READ operations are allowed via `GET /api/categories`
+- See `.github/copilot-category-instructions.md` for detailed rules
+
+**Predefined Categories**: Food, Transport, Bills, Entertainment, Shopping, Health, Education, Other
+

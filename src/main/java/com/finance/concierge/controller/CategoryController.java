@@ -1,55 +1,46 @@
 package com.finance.concierge.controller;
 
 import com.finance.concierge.common.ApiResponse;
-import com.finance.concierge.dto.CategoryRequestDTO;
 import com.finance.concierge.dto.CategoryResponseDTO;
 import com.finance.concierge.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
+/**
+ * REST Controller for Category Management
+ * Categories are predefined and available to all users (read-only)
+ */
+@Tag(name = "Categories", description = "Predefined expense categories (read-only)")
+@Slf4j
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
-@Tag(name = "Categories", description = "Category management APIs")
+@SecurityRequirement(name = "Bearer Authentication")
 public class CategoryController {
 
     private final CategoryService categoryService;
 
+    /**
+     * Get all predefined categories
+     * Categories are global and available to all users
+     */
     @GetMapping
-    @Operation(summary = "Get All Categories", description = "Returns a list of all active categories")
+    @Operation(summary = "Get All Categories",
+               description = "Returns all predefined expense categories available to all users")
     public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> getAllCategories() {
+        log.info("Fetching all predefined categories");
+
         List<CategoryResponseDTO> categories = categoryService.getAllCategories();
-        return ResponseEntity.ok(ApiResponse.success(categories, "Categories retrieved successfully"));
-    }
 
-    @PostMapping
-    @Operation(summary = "Create Category", description = "Creates a new category")
-    public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(@Valid @RequestBody CategoryRequestDTO requestDTO) {
-        CategoryResponseDTO createdCategory = categoryService.createCategory(requestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(createdCategory, "Category created successfully"));
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update Category", description = "Updates an existing category")
-    public ResponseEntity<ApiResponse<CategoryResponseDTO>> updateCategory(
-            @PathVariable Long id,
-            @Valid @RequestBody CategoryRequestDTO requestDTO) {
-        CategoryResponseDTO updatedCategory = categoryService.updateCategory(id, requestDTO);
-        return ResponseEntity.ok(ApiResponse.success(updatedCategory, "Category updated successfully"));
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete Category", description = "Soft deletes a category")
-    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {
-        categoryService.deleteCategory(id);
-        return ResponseEntity.ok(ApiResponse.success(null, "Category deleted successfully"));
+        return ResponseEntity.ok(ApiResponse.success(categories,
+                "Retrieved " + categories.size() + " categories"));
     }
 }
+

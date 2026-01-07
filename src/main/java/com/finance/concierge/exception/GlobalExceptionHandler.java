@@ -83,6 +83,46 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle ForbiddenException
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ApiResponse<Object>> handleForbiddenException(
+            ForbiddenException ex, WebRequest request) {
+        log.error("Forbidden access: {}", ex.getMessage(), ex);
+
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN.value()
+        );
+        response.setPath(request.getDescription(false).replace("uri=", ""));
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
+    /**
+     * Handle ResourceNotFoundException
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
+            ResourceNotFoundException ex, WebRequest request) {
+        log.error("Resource not found: {}", ex.getMessage(), ex);
+
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value()
+        );
+        response.setPath(request.getDescription(false).replace("uri=", ""));
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
+    /**
      * Handle validation errors
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)

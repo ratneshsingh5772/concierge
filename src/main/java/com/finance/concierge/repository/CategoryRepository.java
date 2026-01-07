@@ -10,6 +10,7 @@ import java.util.Optional;
 
 /**
  * Repository for Category entity
+ * Categories are predefined and available to all users
  */
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {

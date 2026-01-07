@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 
 /**
  * Category entity for expense categorization
+ * Predefined system categories available to all users
  */
 @Entity
 @Table(name = "categories", indexes = {
@@ -27,6 +28,7 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
 
     @Column(name = "name", unique = true, nullable = false, length = 50)
     private String name;
